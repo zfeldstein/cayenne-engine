@@ -11,6 +11,7 @@ class Cayenne
      
       def validate_request(workflow_request)
         begin
+        workflow_request = JSON.parse(workflow_request)
           if  workflow_request.has_key?('workflow')
             #if no name attr specfied 
             if ! workflow_request['workflow'].has_key?('name')
@@ -24,7 +25,11 @@ class Cayenne
             end
             #Check if job_ids specifeid and is a list
             if workflow_request['workflow'].has_key?('job_ids')
-              if ! workflow_request['workflow']['job_ids'].is_a? Array
+              if  workflow_request['workflow']['job_ids'].is_a? Array
+                workflow_request['workflow']['job_ids'].map! {|jobs| jobs.values }
+                #Store array of job"ids in db as comma delimted string
+                workflow_request['workflow']['job_ids'] = workflow_request['workflow']['job_ids'].join(",")
+              else
                 return [400, "job ids must be supplied as a list"]
               end
               

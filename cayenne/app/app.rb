@@ -71,7 +71,7 @@ end
  Create a new work flow, required attribute is workflow name
 =end
 post "/workflows" do
-  workflow_request = JSON.parse(request.body.read)
+  workflow_request = request.body.read
   engine = Cayenne::Engine::WorkFlow.new
   workflow_request = engine.validate_request(workflow_request)
   response_json = {"response" => nil, "code" => workflow_request[0]}
@@ -123,10 +123,9 @@ end
 put "/workflows/:id" do
   response_json = {}
   engine = Cayenne::Engine::WorkFlow.new
-  workflow_request = JSON.parse(request.body.read)
+  workflow_request = request.body.read
   workflow_request = engine.validate_request(workflow_request)
   response_json['code'] = workflow_request[0]
-  puts workflow_request[1]
   if workflow_request[0] == 202
     begin
       @workflow = WorkFlow.get(params[:id])
