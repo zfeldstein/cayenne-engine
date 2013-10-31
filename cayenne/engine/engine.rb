@@ -3,11 +3,11 @@ require "bunny"
 require 'json'
 class Cayenne
   class Engine < Cayenne
-#===========================================
-# Work flow class
-#===========================================
+=begin
+ Work flow class
+=end
     class WorkFlow < Engine
-      attr_accessor :workflow_props, :workflow_id, :update_at, :created_at, :job_ids, :name
+      attr_accessor :workflow_props, :workflow_id, :update_at, :created_at, :job_ids, :name, :id
      
       def validate_request(workflow_request)
         begin
@@ -38,12 +38,12 @@ class Cayenne
     
     end
   
-#========================================================
-# Job class
-#========================================================
+=begin
+ Job class
+=end 
     class Job < WorkFlow
       attr_accessor :job_id, :pre_run, :post_run, :tasks,
-      :job_status, :job_time, :job_props
+      :job_status, :job_time, :job_props, :id
       
       def validate_request(job_request,wflow_id)
         begin
@@ -81,6 +81,39 @@ class Cayenne
         connection.close
 
       end
+    end
+    
+=begin
+ Task Class
+=end
+    class Task < Job
+      attr_accessor :job_id, :interpreter, :cmd, :name, :id
+      
+      def validate_request(task_request,job_id)
+        begin
+          task_request = JSON.parse(task_request)
+          if task_request.has_key?('task')
+            if ! task_request['task'].has_key?('name')
+              return [400, "task name must be specified"]
+            end
+           if !task_request['task'].has_key?('interpreter')
+              return [400, "no interpreter specified"]
+            end
+           if !task_request['task'].has_key?('cmd')
+            return [400, "no script/command specfied"]
+           end
+           task_request['task']['job_id'] = job_id
+           return[202, task_request]
+          else
+            return [400, "no task key specified"]  
+          end
+          
+        rescue
+          return [500, "An error has occurred"]
+        end
+        
+      end
+      
     end
   end
 end

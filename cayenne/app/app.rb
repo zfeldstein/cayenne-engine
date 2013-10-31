@@ -195,3 +195,7 @@ get "/jobs/:id" do
   @job = Job.get(params[:id])
   @job.to_json
 end
+
+post "/jobs/:id/tasks" do
+  task_request = request.body.read
+end
