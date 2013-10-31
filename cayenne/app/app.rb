@@ -20,7 +20,6 @@ class WorkFlow
   property :id, Serial
   property :name, String
   property :workflow_props, String
-  property :job_ids, String
   property :created_at, DateTime
   property :updated_at, DateTime
 end
@@ -94,35 +93,15 @@ validate method returns 2 element array, 0th element will be return code
   
   if workflow_request[0] == 202
     workflow_request = workflow_request[1]['workflow']
-    #@workflow = WorkFlow.create(
-    #  :workflow_props => workflow_request['workflow_props'],
-    #  :name => workflow_request['name'],
-    #  :job_ids => workflow_request['job_ids']
-    #)
     @workflow = WorkFlow.create(workflow_request)
   else
     response_json['response'] = workflow_request[1]
+    response_json['response'] = workflow_request[0]
     body response_json.to_json
+    status workflow_request[0]
   end
 
 end
-
-post "/workflows/:id/jobs" do
-  job_request = request.body.read
-  engine = Cayenne::Engine::Job.new
-  job_request = engine.validate_request(job_request, params[:id])
-  response_json = {"response" => nil, "code" => job_request[0]}
-  status job_request[0]
-  
-  if job_request[0] == 202
-    job_request = job_request[1]['job']
-    @job = Job.create(job_request)
-  end
-  
-  
-end
-
-
 
 =begin
 Delete a workflow
@@ -170,17 +149,49 @@ end
 =begin
  List jobs for a workflow
 =end
-
 get "/workflows/:id/jobs" do
   @jobs = Job.all(:workflow_id => params[:id])
   @jobs.to_json
   
 end
-
-
-
-
-
-
-
+=begin
+Create jobs for a given workflow id
+=end
+post "/workflows/:id/jobs" do
+  job_request = request.body.read
+  engine = Cayenne::Engine::Job.new
+  job_request = engine.validate_request(job_request, params[:id])
+  response_json = {"response" => nil, "code" => job_request[0]}
+  status job_request[0]
   
+  if job_request[0] == 202
+    job_request = job_request[1]['job']
+    @job = Job.create(job_request)
+  else
+    response_json['response'] = job_request[1]
+    response_json['code'] = job_request[0]
+    body response_json.to_json
+    status job_request[0]
+  end
+end
+
+=begin
+Delete a Job
+=end
+delete "/jobs/:id" do
+  response_json = {'response' => nil, 'code' => nil}
+  begin 
+    @job = Job.get(params[:id])
+    @job.destroy
+  rescue
+    response_json['response'] = 'Job id not found'
+    response_json['code'] = 404
+    status 404
+    body response_json.to_json
+  end
+end
+
+get "/jobs/:id" do
+  @job = Job.get(params[:id])
+  @job.to_json
+end

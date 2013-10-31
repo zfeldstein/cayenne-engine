@@ -25,18 +25,6 @@ class Cayenne
                 return [400, "workflow properties must be supplied as a list of key value pairs"]
               end
             end
-            #Check if job_ids specifeid and is a list
-            if workflow_request['workflow'].has_key?('job_ids')
-              if  workflow_request['workflow']['job_ids'].is_a? Array
-                workflow_request['workflow']['job_ids'].map! {|jobs| jobs.values }
-                #Store array of job"ids in db as comma delimted string
-                workflow_request['workflow']['job_ids'] = workflow_request['workflow']['job_ids'].join(",")
-              else
-                return [400, "job ids must be supplied as a list"]
-              end
-              
-            end
-            
           else
             #If no work flow key specified
             return [400, 'No workflow key specified']
