@@ -19,8 +19,10 @@ class Cayenne
             end
             # Check if workflow_props exist and specfied as hash
             if workflow_request['workflow'].has_key?('workflow_props')
-              if ! workflow_request['workflow']['workflow_props'].is_a? Hash
-                return [400, "workflow properties must be supplied as a hash"]
+              if workflow_request['workflow']['workflow_props'].is_a? Array
+                 workflow_request['workflow']['workflow_props'] = workflow_request['workflow']['workflow_props'].to_json
+              else
+                return [400, "workflow properties must be supplied as a list of key value pairs"]
               end
             end
             #Check if job_ids specifeid and is a list
@@ -51,17 +53,32 @@ class Cayenne
 #========================================================
 # Job class
 #========================================================
-    class JobRunner < WorkFlow
+    class Job < WorkFlow
       attr_accessor :job_id, :pre_run, :post_run, :tasks,
       :job_status, :job_time, :job_props
       
-      def initialize(job_data)
-        @job_id = job_data['id']
-        @pre_run = job_data['pre_run']
-        @post_run = job_data['post_run']
-        @tasks = job_data['tasks']
-        @job_status = nil
-        @job_time = nil
+      def validate_request(job_request,wflow_id)
+        begin
+          job_request = JSON.parse(job_request)
+          if !wflow_id
+            return [400, "missing workflow id"]
+          else
+            job_request['job']['workflow_id'] = wflow_id
+          end
+          
+          if job_request.has_key?('job')
+            #Make sure job is named
+            if ! job_request['job']['name']
+              return [400, "job name must be specified"]
+            end
+            #all good
+            return [202, job_request]
+          else
+            return [400, "no Job key specified"]  
+          end
+        rescue
+          return [500, "An error has occurred"]
+        end
       end
       
       def start

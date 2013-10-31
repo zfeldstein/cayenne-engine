@@ -29,8 +29,8 @@ class Job
   include DataMapper::Resource
   property :id, Serial
   property :name, String
-  property :pre_run, String
-  property :post_run, String
+  #property :pre_run, String
+  #property :post_run, String
   property :task_ids, String
   property :workflow_id, Integer
   property :start_time, DateTime
@@ -67,6 +67,16 @@ get "/workflows" do
   @workflows = WorkFlow.all
   @workflows.to_json
 end
+
+=begin
+ Create a new work flow, required attribute is workflow name
+=end
+get "/workflows/:id" do
+  @workflow = WorkFlow.get(params[:id])
+  @workflow.to_json
+end
+
+
 =begin
  Create a new work flow, required attribute is workflow name
 =end
@@ -81,20 +91,38 @@ post "/workflows" do
 validate method returns 2 element array, 0th element will be return code
 1st element will be error message or valid workflow object (hash)
 =end
-
+  
   if workflow_request[0] == 202
     workflow_request = workflow_request[1]['workflow']
-    @workflow = WorkFlow.create(
-      :workflow_props => workflow_request['workflow_props'],
-      :name => workflow_request['name'],
-      :job_ids => workflow_request['job_ids']
-    )
+    #@workflow = WorkFlow.create(
+    #  :workflow_props => workflow_request['workflow_props'],
+    #  :name => workflow_request['name'],
+    #  :job_ids => workflow_request['job_ids']
+    #)
+    @workflow = WorkFlow.create(workflow_request)
   else
     response_json['response'] = workflow_request[1]
     body response_json.to_json
   end
 
 end
+
+post "/workflows/:id/jobs" do
+  job_request = request.body.read
+  engine = Cayenne::Engine::Job.new
+  job_request = engine.validate_request(job_request, params[:id])
+  response_json = {"response" => nil, "code" => job_request[0]}
+  status job_request[0]
+  
+  if job_request[0] == 202
+    job_request = job_request[1]['job']
+    @job = Job.create(job_request)
+  end
+  
+  
+end
+
+
 
 =begin
 Delete a workflow
@@ -138,4 +166,21 @@ put "/workflows/:id" do
     end
   end
 end
+
+=begin
+ List jobs for a workflow
+=end
+
+get "/workflows/:id/jobs" do
+  @jobs = Job.all(:workflow_id => params[:id])
+  @jobs.to_json
+  
+end
+
+
+
+
+
+
+
   
