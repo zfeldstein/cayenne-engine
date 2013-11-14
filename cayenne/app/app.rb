@@ -9,7 +9,6 @@ require 'dm-mysql-adapter'
 require 'sinatra/reloader'
 require_relative '../engine/engine'
 
-
 DataMapper.setup(:default, "mysql://#{ENV['DB_USER']}:#{ENV['DB_PASS']}@localhost/cayenne_server")
 
 #==============================
@@ -30,7 +29,6 @@ class Job
   property :name, String
   #property :pre_run, String
   #property :post_run, String
-  property :task_ids, String
   property :workflow_id, Integer
   property :start_time, DateTime
   property :created_at, DateTime
@@ -152,7 +150,6 @@ end
 get "/workflows/:id/jobs" do
   @jobs = Job.all(:workflow_id => params[:id])
   @jobs.to_json
-  
 end
 =begin
 Create jobs for a given workflow id
@@ -190,7 +187,9 @@ delete "/jobs/:id" do
     body response_json.to_json
   end
 end
-
+=begin
+Show job details
+=end
 get "/jobs/:id" do
   @job = Job.get(params[:id])
   @job.to_json
@@ -198,4 +197,21 @@ end
 
 post "/jobs/:id/tasks" do
   task_request = request.body.read
+  engine = Cayenne::Engine::Task.new
+  task_request = engine.validate_request(task_request, params[:id])
+  response_json = {"response" => nil, "code" => task_request[0]}
+  if task_request[0] == 202
+    task_request = task_request[1]['task']
+    @task = Task.create(task_request)
+  else
+    response_json['response'] = task_request[1]
+    response_json['code'] = task_request[0]
+    body response_json.to_json
+    status task_request[0]
+  end
+end
+
+get "/jobs/:id/tasks" do
+  @tasks = Task.all(:job_id => params[:id])
+  @tasks.to_json
 end
