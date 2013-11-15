@@ -34,8 +34,9 @@ class Shell < Interpreter
   end
   
   def process
-    puts 'yeah I"m running'
     shell_cmd = `#{@cmd}`
+    puts @cmd
+    puts shell_cmd
   end
 end
 #========================================================
@@ -44,15 +45,14 @@ end
 class TaskRunner < CayenneJob
   def initialize(task_data)
     @interpreter = task_data['interpreter']
-    @cmd = task_data['task']
+    @cmd = task_data['cmd']
   end
   def run
     begin
-      exec = Kernel.const_get(@interpreter).new(@cmd)
+      exec = Kernel.const_get(@interpreter.capitalize).new(@cmd)
     rescue
       puts "No interpreter found you specified #{@interpreter}"
     end
-    puts exec
     job_properties = exec.process
     if job_properties
       #Set the props and push them out to the db via RPC call
@@ -61,10 +61,6 @@ class TaskRunner < CayenneJob
   end  
 end
 #Shell interpreter
-
-
-
-
 connection = Bunny.new
 connection.start
 channel  = connection.create_channel

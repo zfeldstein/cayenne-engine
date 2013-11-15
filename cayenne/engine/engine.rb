@@ -69,13 +69,14 @@ class Cayenne
         end
       end
       
-      def start
+      def run(tasks)
         connection = Bunny.new
         connection.start
         channel  = connection.create_channel
+        tasks = JSON.parse(tasks)
         # topic exchange name can be any string
         exchange = channel.topic("cayenne.jobs")
-        @tasks.each {|task|
+        tasks.each {|task|
           exchange.publish(task.to_json, :routing_key => 'linux')
         }
         connection.close

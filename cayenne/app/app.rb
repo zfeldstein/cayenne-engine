@@ -215,3 +215,12 @@ get "/jobs/:id/tasks" do
   @tasks = Task.all(:job_id => params[:id])
   @tasks.to_json
 end
+
+
+get "/jobs/:id/run" do
+  @tasks = Task.all(:job_id => params[:id], :order => [ :id.desc ])
+  engine = Cayenne::Engine::Job.new
+  engine.run(@tasks.to_json)
+  
+end
+
