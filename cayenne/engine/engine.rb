@@ -78,10 +78,12 @@ class Cayenne
         connection.start
         channel  = connection.create_channel
         tasks = JSON.parse(tasks)
+        puts "yo"
+        puts tasks
         # topic exchange name can be any string
         exchange = channel.topic("cayenne.jobs")
         tasks.each {|task|
-          exchange.publish(task.to_json, :routing_key => 'linux', :reply_to => 'job_accepted')
+          exchange.publish(task.to_json, :routing_key => 'linux')
         }
         connection.close
 

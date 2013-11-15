@@ -220,9 +220,9 @@ end
 
 
 get "/jobs/:id/run" do
-  @tasks = Task.all(:job_id => params[:id], :order => [ :id.desc ]).to_json
+  @tasks = Task.all(:job_id => params[:id], :order => [ :id.desc ])
   engine = Cayenne::Engine::Job.new()
-  running_task = engine.run(@tasks.to_json)
+  engine.run(@tasks.to_json)
   
 end
 

@@ -35,6 +35,7 @@ class Shell < Interpreter
   
   def process
     shell_cmd = `#{@cmd}`
+    puts "WHAT UP G"
     puts @cmd
     puts shell_cmd
   end
@@ -65,11 +66,11 @@ connection = Bunny.new
 connection.start
 channel  = connection.create_channel
 exchange = channel.topic("cayenne.jobs")
-
 # Subscribers.
 channel.queue("linux").bind(exchange, :routing_key => "linux").subscribe do |delivery_info, metadata, payload|
   payload = JSON.parse(payload)
   payload.each {|task|
+    puts task
     task = TaskRunner.new(payload)
     task.run
   }
