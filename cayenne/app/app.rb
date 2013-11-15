@@ -198,10 +198,12 @@ end
 post "/jobs/:id/tasks" do
   task_request = request.body.read
   engine = Cayenne::Engine::Task.new
+  engine.job_id = params[:id]
   task_request = engine.validate_request(task_request, params[:id])
   response_json = {"response" => nil, "code" => task_request[0]}
   if task_request[0] == 202
     task_request = task_request[1]['task']
+    task_request['cmd'] = engine.create_task_file(task_request['cmd'])
     @task = Task.create(task_request)
   else
     response_json['response'] = task_request[1]
@@ -218,9 +220,9 @@ end
 
 
 get "/jobs/:id/run" do
-  @tasks = Task.all(:job_id => params[:id], :order => [ :id.desc ])
-  engine = Cayenne::Engine::Job.new
-  engine.run(@tasks.to_json)
+  @tasks = Task.all(:job_id => params[:id], :order => [ :id.desc ]).to_json
+  engine = Cayenne::Engine::Job.new()
+  running_task = engine.run(@tasks.to_json)
   
 end
 

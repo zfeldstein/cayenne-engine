@@ -8,6 +8,10 @@ class Cayenne
 =end
     class WorkFlow < Engine
       attr_accessor :workflow_props, :workflow_id, :update_at, :created_at, :job_ids, :name, :id
+      
+      def job_path()
+        @job_path = '/opt/cayenne/jobs'
+      end
      
       def validate_request(workflow_request)
         begin
@@ -77,7 +81,7 @@ class Cayenne
         # topic exchange name can be any string
         exchange = channel.topic("cayenne.jobs")
         tasks.each {|task|
-          exchange.publish(task.to_json, :routing_key => 'linux')
+          exchange.publish(task.to_json, :routing_key => 'linux', :reply_to => 'job_accepted')
         }
         connection.close
 
@@ -114,6 +118,19 @@ class Cayenne
         end
         
       end
+=begin
+Create task file on server and return path
+=end
+    def create_task_file(task_data)
+      file_name = Random.rand(10...180000000) + 9123812
+      file_path = "#{job_path}/#{@job_id}/#{file_name}"
+      job_dir = "#{job_path}/#{@job_id}"
+      unless File.directory?(job_dir) 
+        FileUtils.mkdir_p(job_dir)
+      end
+      File.open(file_path, "w"){|f| f.write(task_data)}
+      return file_path
+    end
       
     end
   end
