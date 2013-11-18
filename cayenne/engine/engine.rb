@@ -79,7 +79,6 @@ class Cayenne
         channel  = connection.create_channel
         tasks = JSON.parse(tasks)
         puts "yo"
-        puts tasks
         # topic exchange name can be any string
         exchange = channel.topic("cayenne.jobs")
         tasks.each {|task|

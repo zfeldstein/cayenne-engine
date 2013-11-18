@@ -34,10 +34,8 @@ class Shell < Interpreter
   end
   
   def process
-    shell_cmd = `#{@cmd}`
-    puts "WHAT UP G"
+    #shell_cmd = `#{@cmd}`
     puts @cmd
-    puts shell_cmd
   end
 end
 #========================================================
@@ -67,16 +65,12 @@ connection.start
 channel  = connection.create_channel
 exchange = channel.topic("cayenne.jobs")
 # Subscribers.
+# Accept one task at a time, tasks will be split on the engine side
 channel.queue("linux").bind(exchange, :routing_key => "linux").subscribe do |delivery_info, metadata, payload|
   payload = JSON.parse(payload)
-  payload.each {|task|
-    puts task
-    task = TaskRunner.new(payload)
-    task.run
-  }
-    
-    
-  end
+  task = TaskRunner.new(payload)
+  task.run
+end
   
   
 
