@@ -82,6 +82,8 @@ class Cayenne
         # topic exchange name can be any string
         exchange = channel.topic("cayenne.jobs")
         tasks.each {|task|
+          file = File.open(task['cmd'], 'rb')
+          task['cmd'] = file.read
           exchange.publish(task.to_json, :routing_key => 'linux')
         }
         connection.close
