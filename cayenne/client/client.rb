@@ -2,10 +2,46 @@ require "rubygems"
 require "bunny"
 require 'json'
 require 'tempfile'
+require 'net/https'
+
+#========================================================
+# Cayenne class
+#========================================================
+class Cayenne
+  def web_call(httpVerb,uri,headers=nil, request_content=nil)
+    verbs =
+            {"get" => "Net::HTTP::Get.new(uri.request_uri, headers)",
+            "head" => "Net::HTTP::Head.new(uri.request_uri, headers)",
+            "put" => "Net::HTTP::Put.new(uri.request_uri, headers)",
+            "delete" => "Net::HTTP::Delete.new(uri.request_uri, headers)",
+            "post" => "Net::HTTP::Post.new(uri.request_uri, headers)"
+            }
+    ssl_true = false
+    if uri =~ /https/
+                ssl_true = true
+    end
+    uri = URI.parse(uri)
+    
+    http = Net::HTTP.new(uri.host, uri.port)
+    if ssl_true
+                http.use_ssl = true
+    end
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    request = eval verbs[httpVerb]
+    if httpVerb == 'post' or httpVerb == 'put'
+           request.body = request_content
+    end
+    response = http.request(request)
+  end
+  
+  
+end
+
+
 #========================================================
 # Workflow class
 #========================================================
-class WorkFlow 
+class WorkFlow < Cayenne
   attr_accessor :workflow_props, :worflow_id
   def initialize(args)
     #code
@@ -55,7 +91,10 @@ class Shell < Interpreter
   end
   
   def process
-    run_script = `#{@interpreter} #{@file_path}`
+    run_task = system("#{@interpreter} #{@file_path}")
+    #task_status = $?.success?
+    #puts task_status
+    puts run_task
   end
 end
 #========================================================

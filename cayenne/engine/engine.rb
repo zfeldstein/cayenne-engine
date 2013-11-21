@@ -84,7 +84,7 @@ class Cayenne
         tasks.each {|task|
           file = File.open(task['cmd'], 'rb')
           task['cmd'] = file.read
-          exchange.publish(task.to_json, :routing_key => 'linux')
+          exchange.publish(task.to_json, :routing_key => 'linux', :reply_to => 'cayenne.call_back')
         }
         connection.close
 

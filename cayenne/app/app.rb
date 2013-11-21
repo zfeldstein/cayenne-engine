@@ -44,6 +44,24 @@ class Task
   property :cmd, String
 end
 
+class RunningJob 
+  include DataMapper::Resource
+  property :id, Serial
+  property :job_id, Integer
+  property :status, String
+  property :job_props, String
+end
+
+class RunningTask
+  include DataMapper::Resource
+  property :id, Serial
+  property :task_id, Integer
+  property :running_job_id, Integer
+  property :status, String
+end
+
+
+
 DataMapper.finalize
 DataMapper.auto_upgrade!
 =begin
